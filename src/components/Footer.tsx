@@ -1,10 +1,8 @@
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 const Footer = () => {
-  return (
-    <footer className="bg-primary text-primary-foreground">
+  return <footer className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
@@ -13,7 +11,8 @@ const Footer = () => {
               <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
                 <span className="text-accent-foreground font-bold text-lg">AC</span>
               </div>
-              <span className="text-xl font-bold">ArmenianCars</span>
+              <span className="text-xl font-bold">StartDrive
+            </span>
             </div>
             <p className="text-primary-foreground/80 leading-relaxed">
               Armenia's most trusted platform for buying and selling quality vehicles. 
@@ -80,10 +79,7 @@ const Footer = () => {
             <div className="space-y-2">
               <p className="text-sm text-primary-foreground/80">Subscribe to our newsletter</p>
               <div className="flex space-x-2">
-                <Input 
-                  placeholder="Your email" 
-                  className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60"
-                />
+                <Input placeholder="Your email" className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60" />
                 <Button variant="accent" size="sm">
                   Subscribe
                 </Button>
@@ -98,8 +94,6 @@ const Footer = () => {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;

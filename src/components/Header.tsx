@@ -17,8 +17,8 @@ const Header = () => {
           {/* Search Bar - Hidden on mobile */}
           <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input placeholder="Search cars, brands, models..." className="pl-10 pr-4 bg-background/50 border-border focus:bg-background" />
+              
+              
             </div>
           </div>
 
