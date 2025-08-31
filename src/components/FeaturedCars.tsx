@@ -1,68 +1,130 @@
+import { useState, useEffect } from "react";
 import { Heart, Eye, MessageCircle, Fuel, Gauge, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Car {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  price: number;
+  image_url: string | null;
+  mileage: string;
+  fuel: string;
+  transmission: string;
+  location: string;
+  featured: boolean;
+  verified: boolean;
+}
 
 const FeaturedCars = () => {
-  const cars = [
-    {
-      id: 1,
-      make: "BMW",
-      model: "X5",
-      year: 2023,
-      price: 65000,
-      image: "/api/placeholder/400/300",
-      mileage: "15,000 km",
-      fuel: "Petrol",
-      transmission: "Automatic",
-      location: "Yerevan",
-      featured: true,
-      verified: true
-    },
-    {
-      id: 2,
-      make: "Mercedes-Benz",
-      model: "C-Class",
-      year: 2022,
-      price: 45000,
-      image: "/api/placeholder/400/300",
-      mileage: "22,000 km",
-      fuel: "Petrol",
-      transmission: "Automatic",
-      location: "Gyumri",
-      featured: true,
-      verified: true
-    },
-    {
-      id: 3,
-      make: "Toyota",
-      model: "Camry",
-      year: 2021,
-      price: 28000,
-      image: "/api/placeholder/400/300",
-      mileage: "35,000 km",
-      fuel: "Hybrid",
-      transmission: "CVT",
-      location: "Vanadzor",
-      featured: false,
-      verified: true
-    },
-    {
-      id: 4,
-      make: "Audi",
-      model: "A4",
-      year: 2023,
-      price: 52000,
-      image: "/api/placeholder/400/300",
-      mileage: "8,000 km",
-      fuel: "Petrol",
-      transmission: "Automatic",
-      location: "Yerevan",
-      featured: true,
-      verified: true
+  const [cars, setCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchFeaturedCars();
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
+  };
+
+  const fetchFeaturedCars = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .eq('featured', true)
+        .limit(4);
+      
+      if (error) throw error;
+      setCars(data || []);
+    } catch (error) {
+      console.error('Error fetching cars:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load featured cars",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const toggleFavorite = async (carId: string) => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add favorites",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: existingFavorite } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('car_id', carId)
+        .single();
+
+      if (existingFavorite) {
+        await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('car_id', carId);
+        
+        toast({
+          title: "Removed from favorites",
+          description: "Car removed from your favorites",
+        });
+      } else {
+        await supabase
+          .from('favorites')
+          .insert([{ user_id: user.id, car_id: carId }]);
+        
+        toast({
+          title: "Added to favorites",
+          description: "Car added to your favorites",
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorites",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Featured Cars
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Loading featured cars...
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-muted/30">
@@ -81,7 +143,7 @@ const FeaturedCars = () => {
             <Card key={car.id} className="group hover:shadow-elegant transition-all duration-300 overflow-hidden bg-gradient-card border-border/50">
               <div className="relative">
                 <img 
-                  src={car.image} 
+                  src={car.image_url || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop'} 
                   alt={`${car.make} ${car.model}`}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -98,10 +160,13 @@ const FeaturedCars = () => {
                   )}
                 </div>
                 <div className="absolute top-3 right-3 flex gap-2">
-                  <Button asChild size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
-                    <Link to="/favorites">
-                      <Heart className="w-4 h-4" />
-                    </Link>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="w-8 h-8 bg-background/80 hover:bg-background"
+                    onClick={() => toggleFavorite(car.id)}
+                  >
+                    <Heart className="w-4 h-4" />
                   </Button>
                   <Button size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
                     <MessageCircle className="w-4 h-4" />

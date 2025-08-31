@@ -1,10 +1,22 @@
+import { useState } from "react";
 import { Search, MapPin, Calendar, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-car.jpg";
 
 const Hero = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [location, setLocation] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (location) params.set('location', location);
+    navigate(`/buy?${params.toString()}`);
+  };
   return (
     <section className="relative min-h-[600px] flex items-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -31,54 +43,13 @@ const Hero = () => {
 
           {/* Search Form */}
           <div className="bg-background/95 backdrop-blur-sm rounded-xl p-6 shadow-elegant">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              <Select>
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="Make" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="toyota">Toyota</SelectItem>
-                  <SelectItem value="bmw">BMW</SelectItem>
-                  <SelectItem value="mercedes">Mercedes-Benz</SelectItem>
-                  <SelectItem value="audi">Audi</SelectItem>
-                  <SelectItem value="honda">Honda</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="Model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="camry">Camry</SelectItem>
-                  <SelectItem value="corolla">Corolla</SelectItem>
-                  <SelectItem value="prius">Prius</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2024">2024</SelectItem>
-                  <SelectItem value="2023">2023</SelectItem>
-                  <SelectItem value="2022">2022</SelectItem>
-                  <SelectItem value="2021">2021</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="Price Range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0-5000">$0 - $5,000</SelectItem>
-                  <SelectItem value="5000-15000">$5,000 - $15,000</SelectItem>
-                  <SelectItem value="15000-30000">$15,000 - $30,000</SelectItem>
-                  <SelectItem value="30000+">$30,000+</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 gap-4 mb-4">
+              <Input 
+                placeholder="Search by make, model, or year..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-background border-border text-lg py-3"
+              />
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -86,10 +57,17 @@ const Hero = () => {
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input 
                   placeholder="Location (e.g., Yerevan, Gyumri)" 
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
                   className="pl-10 bg-background border-border"
                 />
               </div>
-              <Button size="lg" variant="hero" className="px-8">
+              <Button 
+                size="lg" 
+                variant="hero" 
+                className="px-8"
+                onClick={handleSearch}
+              >
                 <Search className="w-4 h-4 mr-2" />
                 Search Cars
               </Button>

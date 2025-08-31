@@ -14,6 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      cars: {
+        Row: {
+          created_at: string
+          description: string | null
+          featured: boolean | null
+          fuel: string
+          id: string
+          image_url: string | null
+          location: string
+          make: string
+          mileage: string
+          model: string
+          price: number
+          transmission: string
+          updated_at: string
+          user_id: string | null
+          verified: boolean | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          fuel: string
+          id?: string
+          image_url?: string | null
+          location: string
+          make: string
+          mileage: string
+          model: string
+          price: number
+          transmission: string
+          updated_at?: string
+          user_id?: string | null
+          verified?: boolean | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          fuel?: string
+          id?: string
+          image_url?: string | null
+          location?: string
+          make?: string
+          mileage?: string
+          model?: string
+          price?: number
+          transmission?: string
+          updated_at?: string
+          user_id?: string | null
+          verified?: boolean | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      favorites: {
+        Row: {
+          car_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          car_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          car_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

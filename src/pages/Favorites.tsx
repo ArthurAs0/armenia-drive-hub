@@ -129,11 +129,11 @@ const Favorites = () => {
               {favoriteCars.map((car) => (
                 <Card key={car.id} className="group hover:shadow-elegant transition-all duration-300 overflow-hidden bg-gradient-card border-border/50">
                   <div className="relative">
-                    <img 
-                      src={car.image} 
-                      alt={`${car.make} ${car.model}`}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                <img 
+                  src={car.image || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop'} 
+                  alt={`${car.make} ${car.model}`}
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                />
                     <div className="absolute top-3 left-3 flex gap-2">
                       {car.featured && (
                         <Badge className="bg-accent text-accent-foreground font-semibold">

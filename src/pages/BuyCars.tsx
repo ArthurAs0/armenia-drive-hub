@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, SlidersHorizontal, Heart, Eye, MessageCircle, Fuel, Gauge, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,112 +7,137 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Car {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  price: number;
+  image_url: string | null;
+  mileage: string;
+  fuel: string;
+  transmission: string;
+  location: string;
+  featured: boolean;
+  verified: boolean;
+}
 
 const BuyCars = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [searchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
+  const [priceRange, setPriceRange] = useState([0, 500000]);
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedFuel, setSelectedFuel] = useState("");
+  const [cars, setCars] = useState<Car[]>([]);
+  const [filteredCars, setFilteredCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const { toast } = useToast();
 
-  const cars = [
-    {
-      id: 1,
-      make: "BMW",
-      model: "X5",
-      year: 2023,
-      price: 65000,
-      image: "/api/placeholder/400/300",
-      mileage: "15,000 km",
-      fuel: "Petrol",
-      transmission: "Automatic",
-      location: "Yerevan",
-      featured: true,
-      verified: true
-    },
-    {
-      id: 2,
-      make: "Mercedes-Benz",
-      model: "C-Class",
-      year: 2022,
-      price: 45000,
-      image: "/api/placeholder/400/300",
-      mileage: "22,000 km",
-      fuel: "Petrol",
-      transmission: "Automatic",
-      location: "Gyumri",
-      featured: true,
-      verified: true
-    },
-    {
-      id: 3,
-      make: "Toyota",
-      model: "Camry",
-      year: 2021,
-      price: 28000,
-      image: "/api/placeholder/400/300",
-      mileage: "35,000 km",
-      fuel: "Hybrid",
-      transmission: "CVT",
-      location: "Vanadzor",
-      featured: false,
-      verified: true
-    },
-    {
-      id: 4,
-      make: "Audi",
-      model: "A4",
-      year: 2023,
-      price: 52000,
-      image: "/api/placeholder/400/300",
-      mileage: "8,000 km",
-      fuel: "Petrol",
-      transmission: "Automatic",
-      location: "Yerevan",
-      featured: true,
-      verified: true
-    },
-    {
-      id: 5,
-      make: "Honda",
-      model: "Civic",
-      year: 2020,
-      price: 22000,
-      image: "/api/placeholder/400/300",
-      mileage: "45,000 km",
-      fuel: "Petrol",
-      transmission: "Manual",
-      location: "Kapan",
-      featured: false,
-      verified: true
-    },
-    {
-      id: 6,
-      make: "Volkswagen",
-      model: "Golf",
-      year: 2022,
-      price: 25000,
-      image: "/api/placeholder/400/300",
-      mileage: "18,000 km",
-      fuel: "Diesel",
-      transmission: "Automatic",
-      location: "Yerevan",
-      featured: false,
-      verified: true
+  useEffect(() => {
+    fetchCars();
+    checkUser();
+  }, []);
+
+  useEffect(() => {
+    filterCars();
+  }, [cars, searchQuery, priceRange, selectedMake, selectedYear, selectedFuel]);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
+  };
+
+  const fetchCars = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setCars(data || []);
+    } catch (error) {
+      console.error('Error fetching cars:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load cars",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const filteredCars = cars.filter(car => {
-    const matchesSearch = car.make.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         car.model.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPrice = car.price >= priceRange[0] && car.price <= priceRange[1];
-    const matchesMake = !selectedMake || car.make === selectedMake;
-    const matchesYear = !selectedYear || car.year.toString() === selectedYear;
-    const matchesFuel = !selectedFuel || car.fuel === selectedFuel;
-    
-    return matchesSearch && matchesPrice && matchesMake && matchesYear && matchesFuel;
-  });
+  const filterCars = () => {
+    let filtered = cars.filter(car => {
+      const matchesSearch = car.make.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           car.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           car.location.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPrice = car.price >= priceRange[0] && car.price <= priceRange[1];
+      const matchesMake = !selectedMake || car.make === selectedMake;
+      const matchesYear = !selectedYear || car.year.toString() === selectedYear;
+      const matchesFuel = !selectedFuel || car.fuel === selectedFuel;
+      
+      return matchesSearch && matchesPrice && matchesMake && matchesYear && matchesFuel;
+    });
+    setFilteredCars(filtered);
+  };
+
+  const toggleFavorite = async (carId: string) => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add favorites",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: existingFavorite } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('car_id', carId)
+        .maybeSingle();
+
+      if (existingFavorite) {
+        await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('car_id', carId);
+        
+        toast({
+          title: "Removed from favorites",
+          description: "Car removed from your favorites",
+        });
+      } else {
+        await supabase
+          .from('favorites')
+          .insert([{ user_id: user.id, car_id: carId }]);
+        
+        toast({
+          title: "Added to favorites",
+          description: "Car added to your favorites",
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorites",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -232,7 +257,7 @@ const BuyCars = () => {
             <Card key={car.id} className="group hover:shadow-elegant transition-all duration-300 overflow-hidden bg-gradient-card border-border/50">
               <div className="relative">
                 <img 
-                  src={car.image} 
+                  src={car.image_url || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop'} 
                   alt={`${car.make} ${car.model}`}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -249,7 +274,12 @@ const BuyCars = () => {
                   )}
                 </div>
                 <div className="absolute top-3 right-3 flex gap-2">
-                  <Button size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="w-8 h-8 bg-background/80 hover:bg-background"
+                    onClick={() => toggleFavorite(car.id)}
+                  >
                     <Heart className="w-4 h-4" />
                   </Button>
                   <Button size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
