@@ -1,6 +1,7 @@
 import { Search, Menu, User, Heart, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 const Header = () => {
   return <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
@@ -37,9 +38,11 @@ const Header = () => {
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <MessageCircle className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm" className="hidden sm:flex">
-              <User className="w-4 h-4 mr-2" />
-              Sign In
+            <Button asChild variant="outline" size="sm" className="hidden sm:flex">
+              <Link to="/auth" className="inline-flex items-center">
+                <User className="w-4 h-4 mr-2" />
+                Sign In
+              </Link>
             </Button>
             <Button variant="accent" size="sm">
               Sell Car
