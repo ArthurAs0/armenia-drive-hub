@@ -2,6 +2,7 @@ import { Heart, Eye, MessageCircle, Fuel, Gauge, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 const FeaturedCars = () => {
   const cars = [
@@ -97,8 +98,10 @@ const FeaturedCars = () => {
                   )}
                 </div>
                 <div className="absolute top-3 right-3 flex gap-2">
-                  <Button size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
-                    <Heart className="w-4 h-4" />
+                  <Button asChild size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
+                    <Link to="/favorites">
+                      <Heart className="w-4 h-4" />
+                    </Link>
                   </Button>
                   <Button size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
                     <MessageCircle className="w-4 h-4" />
@@ -135,12 +138,16 @@ const FeaturedCars = () => {
               </CardContent>
 
               <CardFooter className="p-4 pt-0 space-y-2">
-                <Button className="w-full" variant="default">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View Details
+                <Button asChild className="w-full" variant="default">
+                  <Link to={`/car/${car.id}`}>
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Details
+                  </Link>
                 </Button>
-                <Button className="w-full" variant="outline">
-                  Add to Compare
+                <Button asChild className="w-full" variant="outline">
+                  <Link to="/compare">
+                    Add to Compare
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -148,8 +155,10 @@ const FeaturedCars = () => {
         </div>
 
         <div className="text-center mt-12">
-          <Button variant="accent" size="lg" className="px-8">
-            View All Cars
+          <Button asChild variant="accent" size="lg" className="px-8">
+            <Link to="/buy">
+              View All Cars
+            </Link>
           </Button>
         </div>
       </div>

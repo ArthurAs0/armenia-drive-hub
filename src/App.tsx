@@ -6,6 +6,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import BuyCars from "./pages/BuyCars";
+import SellCar from "./pages/SellCar";
+import Chat from "./pages/Chat";
+import Compare from "./pages/Compare";
+import Profile from "./pages/Profile";
+import CarDetails from "./pages/CarDetails";
+import Favorites from "./pages/Favorites";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +24,13 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/buy" element={<BuyCars />} />
+          <Route path="/sell" element={<SellCar />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/car/:id" element={<CarDetails />} />
+          <Route path="/favorites" element={<Favorites />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="/auth" element={<Auth />} />
           <Route path="*" element={<NotFound />} />

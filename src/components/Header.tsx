@@ -24,10 +24,10 @@ const Header = () => {
 
           {/* Navigation */}
           <nav className="hidden lg:flex items-center space-x-6">
-            <a href="#" className="text-foreground hover:text-primary transition-colors">Buy</a>
-            <a href="#" className="text-foreground hover:text-primary transition-colors">Sell</a>
-            <a href="#" className="text-foreground hover:text-primary transition-colors">Compare</a>
-            <a href="#" className="text-foreground hover:text-primary transition-colors">Finance</a>
+            <Link to="/buy" className="text-foreground hover:text-primary transition-colors">Buy</Link>
+            <Link to="/sell" className="text-foreground hover:text-primary transition-colors">Sell</Link>
+            <Link to="/compare" className="text-foreground hover:text-primary transition-colors">Compare</Link>
+            <Link to="/chat" className="text-foreground hover:text-primary transition-colors">Chat</Link>
           </nav>
 
           {/* Action Buttons */}
@@ -38,14 +38,21 @@ const Header = () => {
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <MessageCircle className="w-4 h-4" />
             </Button>
-            <Button asChild variant="outline" size="sm" className="hidden sm:flex">
-              <Link to="/auth" className="inline-flex items-center">
-                <User className="w-4 h-4 mr-2" />
-                Sign In
+            <Button asChild variant="ghost" size="icon" className="hidden sm:flex">
+              <Link to="/favorites">
+                <Heart className="w-4 h-4" />
               </Link>
             </Button>
-            <Button variant="accent" size="sm">
-              Sell Car
+            <Button asChild variant="outline" size="sm" className="hidden sm:flex">
+              <Link to="/profile" className="inline-flex items-center">
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </Link>
+            </Button>
+            <Button asChild variant="accent" size="sm">
+              <Link to="/sell">
+                Sell Car
+              </Link>
             </Button>
             <Button variant="ghost" size="icon" className="lg:hidden">
               <Menu className="w-4 h-4" />
