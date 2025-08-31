@@ -1,10 +1,8 @@
 import { Search, Menu, User, Heart, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 const Header = () => {
-  return (
-    <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+  return <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -12,17 +10,14 @@ const Header = () => {
             <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">AC</span>
             </div>
-            <span className="text-xl font-bold text-primary">ArmenianCars</span>
+            <span className="text-xl font-bold text-primary">StartDrive</span>
           </div>
 
           {/* Search Bar - Hidden on mobile */}
           <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input 
-                placeholder="Search cars, brands, models..." 
-                className="pl-10 pr-4 bg-background/50 border-border focus:bg-background"
-              />
+              <Input placeholder="Search cars, brands, models..." className="pl-10 pr-4 bg-background/50 border-border focus:bg-background" />
             </div>
           </div>
 
@@ -59,15 +54,10 @@ const Header = () => {
         <div className="md:hidden mt-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input 
-              placeholder="Search cars, brands, models..." 
-              className="pl-10 pr-4 bg-background/50 border-border"
-            />
+            <Input placeholder="Search cars, brands, models..." className="pl-10 pr-4 bg-background/50 border-border" />
           </div>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;
