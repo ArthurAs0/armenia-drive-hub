@@ -32,12 +32,8 @@ const Header = () => {
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Heart className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <MessageCircle className="w-4 h-4" />
-            </Button>
+            
+            
             <Button asChild variant="ghost" size="icon" className="hidden sm:flex">
               <Link to="/favorites">
                 <Heart className="w-4 h-4" />
