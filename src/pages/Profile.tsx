@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Mail, Phone, MapPin, Car, Heart, MessageCircle, Settings, LogOut } from "lucide-react";
+import { User, Mail, Phone, MapPin, Car, Heart, MessageCircle, Settings, LogOut, Edit, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,17 +10,22 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const Profile = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [myListings, setMyListings] = useState<any[]>([]);
+  const [favoriteCarsData, setFavoriteCarsData] = useState<any[]>([]);
   const [profile, setProfile] = useState({
     full_name: "",
     phone: "",
     location: ""
   });
+  
+  const { favoriteIds, toggleFavorite, isFavorited, refetchFavorites } = useFavorites(user);
 
   useEffect(() => {
     checkUser();
@@ -40,7 +45,7 @@ const Profile = () => {
         .from("profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       
       if (profileData) {
         setProfile({
@@ -49,10 +54,48 @@ const Profile = () => {
           location: ""
         });
       }
+      
+      // Fetch user's car listings
+      await fetchUserListings(user.id);
+      
+      // Fetch user's favorite cars
+      await fetchFavoriteCars(user.id);
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserListings = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("cars")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setMyListings(data || []);
+    } catch (error) {
+      console.error("Error fetching user listings:", error);
+    }
+  };
+
+  const fetchFavoriteCars = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("favorites")
+        .select(`
+          car_id,
+          cars (*)
+        `)
+        .eq("user_id", userId);
+      
+      if (error) throw error;
+      setFavoriteCarsData(data?.map((fav: any) => fav.cars) || []);
+    } catch (error) {
+      console.error("Error fetching favorite cars:", error);
     }
   };
 
@@ -88,51 +131,40 @@ const Profile = () => {
     }
   };
 
-  const myListings = [
-    {
-      id: 1,
-      make: "BMW",
-      model: "X5",
-      year: 2023,
-      price: 65000,
-      image: "/api/placeholder/300/200",
-      status: "Active",
-      views: 245,
-      inquiries: 12
-    },
-    {
-      id: 2,
-      make: "Mercedes-Benz",
-      model: "C-Class",
-      year: 2022,
-      price: 45000,
-      image: "/api/placeholder/300/200",
-      status: "Sold",
-      views: 189,
-      inquiries: 8
-    }
-  ];
+  const handleMarkAsSold = async (carId: string) => {
+    try {
+      const { error } = await supabase
+        .from("cars")
+        .update({ verified: false })
+        .eq("id", carId)
+        .eq("user_id", user?.id);
 
-  const favoriteCars = [
-    {
-      id: 3,
-      make: "Toyota",
-      model: "Camry",
-      year: 2021,
-      price: 28000,
-      image: "/api/placeholder/300/200",
-      location: "Vanadzor"
-    },
-    {
-      id: 4,
-      make: "Audi",
-      model: "A4",
-      year: 2023,
-      price: 52000,
-      image: "/api/placeholder/300/200",
-      location: "Yerevan"
+      if (error) throw error;
+
+      // Refresh listings
+      await fetchUserListings(user.id);
+      
+      toast({
+        title: "Car marked as sold",
+        description: "Your listing has been marked as sold.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update listing. Please try again.",
+        variant: "destructive",
+      });
     }
-  ];
+  };
+
+  const handleEditListing = (carId: string) => {
+    navigate(`/sell-car?edit=${carId}`);
+  };
+
+  const handleViewCarDetails = (carId: string) => {
+    navigate(`/car/${carId}`);
+  };
+
 
   if (loading) {
     return (
@@ -193,7 +225,7 @@ const Profile = () => {
               <Card>
                 <CardContent className="p-6 text-center">
                   <Heart className="w-8 h-8 text-primary mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-foreground">{favoriteCars.length}</div>
+                  <div className="text-2xl font-bold text-foreground">{favoriteCarsData.length}</div>
                   <p className="text-muted-foreground">Favorites</p>
                 </CardContent>
               </Card>
@@ -202,9 +234,9 @@ const Profile = () => {
                 <CardContent className="p-6 text-center">
                   <MessageCircle className="w-8 h-8 text-primary mx-auto mb-2" />
                   <div className="text-2xl font-bold text-foreground">
-                    {myListings.reduce((total, car) => total + car.inquiries, 0)}
+                    {myListings.length}
                   </div>
-                  <p className="text-muted-foreground">Total Inquiries</p>
+                  <p className="text-muted-foreground">Total Listings</p>
                 </CardContent>
               </Card>
             </div>
@@ -234,94 +266,140 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="listings" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {myListings.map((car) => (
-                <Card key={car.id}>
-                  <div className="relative">
-                    <img 
-                      src={car.image} 
-                      alt={`${car.make} ${car.model}`}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    <Badge 
-                      className={`absolute top-3 right-3 ${
-                        car.status === "Active" 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {car.status}
-                    </Badge>
-                  </div>
-                  
-                  <CardContent className="p-4">
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      {car.year} {car.make} {car.model}
-                    </h3>
-                    <div className="text-xl font-bold text-primary mb-3">
-                      ${car.price.toLocaleString()}
+            {myListings.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No listings yet</h3>
+                  <p className="text-muted-foreground mb-4">Start selling your first car today!</p>
+                  <Button onClick={() => navigate('/sell-car')}>
+                    List Your First Car
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {myListings.map((car) => (
+                  <Card key={car.id}>
+                    <div className="relative">
+                      <img 
+                        src={car.image_url || "/api/placeholder/300/200"} 
+                        alt={`${car.make} ${car.model}`}
+                        className="w-full h-48 object-cover rounded-t-lg"
+                        onError={(e) => {
+                          e.currentTarget.src = "/api/placeholder/300/200";
+                        }}
+                      />
+                      <Badge 
+                        className={`absolute top-3 right-3 ${
+                          car.verified
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {car.verified ? "Active" : "Sold"}
+                      </Badge>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                      <div>
-                        <span className="font-medium">Views:</span> {car.views}
+                    <CardContent className="p-4">
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        {car.year} {car.make} {car.model}
+                      </h3>
+                      <div className="text-xl font-bold text-primary mb-3">
+                        ${car.price.toLocaleString()}
                       </div>
-                      <div>
-                        <span className="font-medium">Inquiries:</span> {car.inquiries}
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
+                        <div>
+                          <span className="font-medium">Location:</span> {car.location}
+                        </div>
+                        <div>
+                          <span className="font-medium">Mileage:</span> {car.mileage}
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="mt-4 space-y-2">
-                      <Button variant="outline" className="w-full">
-                        Edit Listing
-                      </Button>
-                      {car.status === "Active" && (
-                        <Button variant="secondary" className="w-full">
-                          Mark as Sold
+                      
+                      <div className="mt-4 space-y-2">
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => handleEditListing(car.id)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Listing
                         </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                        {car.verified && (
+                          <Button 
+                            variant="secondary" 
+                            className="w-full"
+                            onClick={() => handleMarkAsSold(car.id)}
+                          >
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Mark as Sold
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="favorites" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {favoriteCars.map((car) => (
-                <Card key={car.id}>
-                  <div className="relative">
-                    <img 
-                      src={car.image} 
-                      alt={`${car.make} ${car.model}`}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-3 right-3 bg-background/80 hover:bg-background"
-                    >
-                      <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-                    </Button>
-                  </div>
-                  
-                  <CardContent className="p-4">
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      {car.year} {car.make} {car.model}
-                    </h3>
-                    <div className="text-xl font-bold text-primary mb-2">
-                      ${car.price.toLocaleString()}
+            {favoriteCarsData.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No favorites yet</h3>
+                  <p className="text-muted-foreground mb-4">Start adding cars to your favorites to see them here!</p>
+                  <Button onClick={() => navigate('/buy-cars')}>
+                    Browse Cars
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {favoriteCarsData.map((car) => (
+                  <Card key={car.id}>
+                    <div className="relative">
+                      <img 
+                        src={car.image_url || "/api/placeholder/300/200"} 
+                        alt={`${car.make} ${car.model}`}
+                        className="w-full h-48 object-cover rounded-t-lg"
+                        onError={(e) => {
+                          e.currentTarget.src = "/api/placeholder/300/200";
+                        }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-3 right-3 bg-background/80 hover:bg-background"
+                        onClick={() => toggleFavorite(car.id)}
+                      >
+                        <Heart className={`w-4 h-4 ${isFavorited(car.id) ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
+                      </Button>
                     </div>
-                    <p className="text-muted-foreground text-sm mb-4">{car.location}</p>
                     
-                    <Button className="w-full">
-                      View Details
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <CardContent className="p-4">
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        {car.year} {car.make} {car.model}
+                      </h3>
+                      <div className="text-xl font-bold text-primary mb-2">
+                        ${car.price.toLocaleString()}
+                      </div>
+                      <p className="text-muted-foreground text-sm mb-4">{car.location}</p>
+                      
+                      <Button 
+                        className="w-full"
+                        onClick={() => handleViewCarDetails(car.id)}
+                      >
+                        View Details
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
