@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface Car {
   id: string;
@@ -38,6 +39,7 @@ const BuyCars = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
+  const { toggleFavorite, isFavorited } = useFavorites(user);
 
   useEffect(() => {
     fetchCars();
@@ -89,54 +91,6 @@ const BuyCars = () => {
     setFilteredCars(filtered);
   };
 
-  const toggleFavorite = async (carId: string) => {
-    if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to add favorites",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { data: existingFavorite } = await supabase
-        .from('favorites')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('car_id', carId)
-        .maybeSingle();
-
-      if (existingFavorite) {
-        await supabase
-          .from('favorites')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('car_id', carId);
-        
-        toast({
-          title: "Removed from favorites",
-          description: "Car removed from your favorites",
-        });
-      } else {
-        await supabase
-          .from('favorites')
-          .insert([{ user_id: user.id, car_id: carId }]);
-        
-        toast({
-          title: "Added to favorites",
-          description: "Car added to your favorites",
-        });
-      }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update favorites",
-        variant: "destructive",
-      });
-    }
-  };
 
 
   return (
@@ -274,14 +228,20 @@ const BuyCars = () => {
                   )}
                 </div>
                 <div className="absolute top-3 right-3 flex gap-2">
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="w-8 h-8 bg-background/80 hover:bg-background"
-                    onClick={() => toggleFavorite(car.id)}
-                  >
-                    <Heart className="w-4 h-4" />
-                  </Button>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="w-8 h-8 bg-background/80 hover:bg-background"
+                          onClick={() => toggleFavorite(car.id)}
+                        >
+                          <Heart 
+                            className={`w-4 h-4 transition-colors ${
+                              isFavorited(car.id) 
+                                ? 'fill-red-500 text-red-500' 
+                                : 'text-foreground hover:text-red-500'
+                            }`} 
+                          />
+                        </Button>
                   <Button size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
                     <MessageCircle className="w-4 h-4" />
                   </Button>

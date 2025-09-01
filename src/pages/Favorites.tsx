@@ -1,80 +1,128 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, Eye, MessageCircle, Fuel, Gauge, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Car {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  price: number;
+  image_url: string | null;
+  mileage: string;
+  fuel: string;
+  transmission: string;
+  location: string;
+  featured: boolean;
+  verified: boolean;
+  created_at: string;
+}
 
 const Favorites = () => {
-  const [favoriteCars, setFavoriteCars] = useState([
-    {
-      id: 1,
-      make: "BMW",
-      model: "X5",
-      year: 2023,
-      price: 65000,
-      image: "/api/placeholder/400/300",
-      mileage: "15,000 km",
-      fuel: "Petrol",
-      transmission: "Automatic",
-      location: "Yerevan",
-      featured: true,
-      verified: true,
-      dateAdded: "2 days ago"
-    },
-    {
-      id: 3,
-      make: "Toyota",
-      model: "Camry",
-      year: 2021,
-      price: 28000,
-      image: "/api/placeholder/400/300",
-      mileage: "35,000 km",
-      fuel: "Hybrid",
-      transmission: "CVT",
-      location: "Vanadzor",
-      featured: false,
-      verified: true,
-      dateAdded: "1 week ago"
-    },
-    {
-      id: 4,
-      make: "Audi",
-      model: "A4",
-      year: 2023,
-      price: 52000,
-      image: "/api/placeholder/400/300",
-      mileage: "8,000 km",
-      fuel: "Petrol",
-      transmission: "Automatic",
-      location: "Yerevan",
-      featured: true,
-      verified: true,
-      dateAdded: "3 days ago"
-    },
-    {
-      id: 5,
-      make: "Mercedes-Benz",
-      model: "C-Class",
-      year: 2022,
-      price: 45000,
-      image: "/api/placeholder/400/300",
-      mileage: "22,000 km",
-      fuel: "Petrol",
-      transmission: "Automatic",
-      location: "Gyumri",
-      featured: true,
-      verified: true,
-      dateAdded: "5 days ago"
-    }
-  ]);
+  const [favoriteCars, setFavoriteCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const { toast } = useToast();
 
-  const handleRemoveFavorite = (carId: number) => {
-    setFavoriteCars(favoriteCars.filter(car => car.id !== carId));
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchFavoriteCars();
+    }
+  }, [user]);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
   };
 
-  const handleClearAll = () => {
-    setFavoriteCars([]);
+  const fetchFavoriteCars = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select(`
+          car_id,
+          cars (*)
+        `)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      const cars = data?.map(fav => fav.cars).filter(Boolean) || [];
+      setFavoriteCars(cars);
+    } catch (error) {
+      console.error('Error fetching favorite cars:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load favorite cars",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveFavorite = async (carId: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('car_id', carId);
+      
+      if (error) throw error;
+      
+      setFavoriteCars(favoriteCars.filter(car => car.id !== carId));
+      toast({
+        title: "Removed from favorites",
+        description: "Car removed from your favorites",
+      });
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove from favorites",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      setFavoriteCars([]);
+      toast({
+        title: "Favorites cleared",
+        description: "All favorites have been removed",
+      });
+    } catch (error) {
+      console.error('Error clearing favorites:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear favorites",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -125,48 +173,61 @@ const Favorites = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {favoriteCars.map((car) => (
-                <Card key={car.id} className="group hover:shadow-elegant transition-all duration-300 overflow-hidden bg-gradient-card border-border/50">
-                  <div className="relative">
-                <img 
-                  src={car.image || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop'} 
-                  alt={`${car.make} ${car.model}`}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                    <div className="absolute top-3 left-3 flex gap-2">
-                      {car.featured && (
-                        <Badge className="bg-accent text-accent-foreground font-semibold">
-                          Featured
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <div className="h-48 bg-muted"></div>
+                    <CardContent className="p-4">
+                      <div className="h-4 bg-muted rounded mb-2"></div>
+                      <div className="h-4 bg-muted rounded w-2/3"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {favoriteCars.map((car) => (
+                  <Card key={car.id} className="group hover:shadow-elegant transition-all duration-300 overflow-hidden bg-gradient-card border-border/50">
+                    <div className="relative">
+                      <img 
+                        src={car.image_url || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop'} 
+                        alt={`${car.make} ${car.model}`}
+                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        {car.featured && (
+                          <Badge className="bg-accent text-accent-foreground font-semibold">
+                            Featured
+                          </Badge>
+                        )}
+                        {car.verified && (
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="absolute top-3 right-3 flex gap-2">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="w-8 h-8 bg-background/80 hover:bg-background"
+                          onClick={() => handleRemoveFavorite(car.id)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
+                          <MessageCircle className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      {/* Date Added */}
+                      <div className="absolute bottom-3 left-3">
+                        <Badge variant="secondary" className="bg-background/90 text-foreground text-xs">
+                          Added {new Date(car.created_at).toLocaleDateString()}
                         </Badge>
-                      )}
-                      {car.verified && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                          Verified
-                        </Badge>
-                      )}
+                      </div>
                     </div>
-                    <div className="absolute top-3 right-3 flex gap-2">
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="w-8 h-8 bg-background/80 hover:bg-background"
-                        onClick={() => handleRemoveFavorite(car.id)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="w-8 h-8 bg-background/80 hover:bg-background">
-                        <MessageCircle className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    
-                    {/* Date Added */}
-                    <div className="absolute bottom-3 left-3">
-                      <Badge variant="secondary" className="bg-background/90 text-foreground text-xs">
-                        Added {car.dateAdded}
-                      </Badge>
-                    </div>
-                  </div>
 
                   <CardContent className="p-4">
                     <div className="mb-3">
@@ -212,6 +273,7 @@ const Favorites = () => {
                 </Card>
               ))}
             </div>
+            )}
 
             {/* Actions */}
             <div className="text-center pt-8">
