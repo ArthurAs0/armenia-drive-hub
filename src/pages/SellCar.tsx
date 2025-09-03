@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Car, Upload, Camera, DollarSign, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Car, Upload, Camera, DollarSign, FileText, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,9 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Link, useNavigate } from "react-router-dom";
 
 const SellCar = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     make: "",
     model: "",
@@ -25,21 +30,132 @@ const SellCar = () => {
     email: ""
   });
 
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to sell your car",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+    setUser(session.user);
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Car listing submitted!",
-      description: "Your car has been submitted for review. We'll contact you soon.",
-    });
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to sell your car",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .insert([{
+          make: formData.make,
+          model: formData.model,
+          year: parseInt(formData.year),
+          price: parseInt(formData.price),
+          mileage: formData.mileage,
+          fuel: formData.fuel,
+          transmission: formData.transmission,
+          location: formData.location,
+          description: formData.description,
+          image_url: `https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop&auto=format&q=80`,
+          featured: false,
+          verified: false,
+          seller_id: user.id
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Car listed successfully!",
+        description: "Your car has been listed and is now available for buyers to view.",
+      });
+      
+      // Reset form
+      setFormData({
+        make: "",
+        model: "",
+        year: "",
+        mileage: "",
+        price: "",
+        fuel: "",
+        transmission: "",
+        color: "",
+        location: "",
+        description: "",
+        phone: "",
+        email: ""
+      });
+      
+      // Navigate to profile to see the listing
+      navigate('/profile');
+      
+    } catch (error) {
+      console.error('Error creating listing:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create listing. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
+          <p className="text-muted-foreground mb-4">Please sign in to sell your car</p>
+          <Button asChild>
+            <Link to="/auth">Sign In</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
+        {/* Back Button */}
+        <div className="mb-6 flex items-center justify-between">
+          <Button asChild variant="ghost" className="flex items-center gap-2">
+            <Link to="/profile">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Profile
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="flex items-center gap-2">
+            <Link to="/">
+              <ArrowLeft className="w-4 h-4" />
+              Home
+            </Link>
+          </Button>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-4">Sell Your Car</h1>
@@ -269,8 +385,8 @@ const SellCar = () => {
 
           {/* Submit */}
           <div className="flex justify-center">
-            <Button type="submit" size="lg" className="px-12">
-              List My Car
+            <Button type="submit" size="lg" className="px-12" disabled={loading}>
+              {loading ? "Creating Listing..." : "List My Car"}
             </Button>
           </div>
         </form>

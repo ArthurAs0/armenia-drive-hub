@@ -185,11 +185,17 @@ const CarDetails = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <Button asChild variant="ghost" className="flex items-center gap-2">
             <Link to="/buy">
               <ArrowLeft className="w-4 h-4" />
               Back to Cars
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="flex items-center gap-2">
+            <Link to="/">
+              <ArrowLeft className="w-4 h-4" />
+              Home
             </Link>
           </Button>
         </div>
@@ -343,15 +349,26 @@ const CarDetails = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  <Button className="w-full flex items-center gap-2">
+                  <Button 
+                    className="w-full flex items-center gap-2"
+                    onClick={() => window.open('tel:+37412345678', '_self')}
+                  >
                     <Phone className="w-4 h-4" />
                     Call Seller
                   </Button>
-                  <Button variant="outline" className="w-full flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={() => window.open('/chat', '_blank')}
+                  >
                     <MessageCircle className="w-4 h-4" />
                     Send Message
                   </Button>
-                  <Button variant="outline" className="w-full flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={() => window.open('mailto:seller@example.com?subject=Inquiry about ' + car.make + ' ' + car.model, '_blank')}
+                  >
                     <Mail className="w-4 h-4" />
                     Email Seller
                   </Button>
