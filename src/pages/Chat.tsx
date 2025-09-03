@@ -1,188 +1,266 @@
-import { useState } from "react";
-import { Send, Bot, User, MessageCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Send, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
-  content: string;
-  role: "user" | "assistant";
-  timestamp: Date;
+  message: string;
+  sender_id: string;
+  created_at: string;
+}
+
+interface Chat {
+  id: string;
+  car_id: string;
+  buyer_id: string;
+  seller_id: string;
+  cars: {
+    make: string;
+    model: string;
+    year: number;
+    price: number;
+  };
 }
 
 const Chat = () => {
+  const { chatId } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Hello! I'm your AI assistant for StartDrive. I can help you find cars, answer questions about vehicles, pricing, and guide you through buying or selling process. How can I help you today?",
-      role: "assistant",
-      timestamp: new Date()
+  const [user, setUser] = useState<any>(null);
+  const [chat, setChat] = useState<Chat | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  useEffect(() => {
+    if (user && chatId) {
+      fetchChat();
+      fetchMessages();
     }
-  ]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  }, [user, chatId]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputMessage,
-      role: "user",
-      timestamp: new Date()
-    };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage("");
-    setIsLoading(true);
-
-    // Simulate AI response (replace with actual OpenAI API call)
+  const checkUser = async () => {
     try {
-      setTimeout(() => {
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          content: getAIResponse(inputMessage),
-          role: "assistant",
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiResponse]);
-        setIsLoading(false);
-      }, 1000);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+      setUser(user);
     } catch (error) {
+      console.error("Error checking user:", error);
+      navigate("/auth");
+    }
+  };
+
+  const fetchChat = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("chats")
+        .select(`
+          *,
+          cars (make, model, year, price)
+        `)
+        .eq("id", chatId)
+        .single();
+
+      if (error) throw error;
+      setChat(data);
+    } catch (error) {
+      console.error("Error fetching chat:", error);
       toast({
         title: "Error",
-        description: "Failed to get AI response. Please try again.",
+        description: "Failed to load chat",
         variant: "destructive",
       });
-      setIsLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getAIResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes("price") || input.includes("cost")) {
-      return "I can help you with pricing information! Car prices vary based on make, model, year, condition, and mileage. For example, a 2023 BMW X5 typically ranges from $60,000-$70,000. Would you like pricing information for a specific vehicle?";
+  const fetchMessages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("chat_id", chatId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
     }
-    
-    if (input.includes("bmw") || input.includes("mercedes") || input.includes("toyota")) {
-      return "Great choice! These are popular brands in Armenia. I can help you find specific models, compare features, or check current availability. What particular model are you interested in?";
-    }
-    
-    if (input.includes("sell") || input.includes("selling")) {
-      return "To sell your car on StartDrive: 1) Go to our Sell Car page, 2) Fill out the detailed form with your car's information, 3) Upload high-quality photos, 4) Set a competitive price, 5) Our team will verify and publish your listing. The process usually takes 24-48 hours.";
-    }
-    
-    if (input.includes("buy") || input.includes("buying")) {
-      return "For buying a car: 1) Browse our Buy Cars section with advanced filters, 2) Use the search to find specific models, 3) View detailed car information and photos, 4) Contact sellers directly through our platform, 5) Arrange viewings and inspections. Would you like help finding a specific type of car?";
-    }
-    
-    return "I'm here to help with all your car-related questions! I can assist with finding cars, pricing information, buying/selling process, comparisons between models, and general automotive advice. What specific information are you looking for?";
   };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !user || !chatId) return;
+
+    try {
+      const { error } = await supabase
+        .from("messages")
+        .insert([
+          {
+            chat_id: chatId,
+            sender_id: user.id,
+            message: newMessage.trim(),
+          },
+        ]);
+
+      if (error) throw error;
+
+      setNewMessage("");
+      fetchMessages(); // Refresh messages
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading chat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!chat) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Chat not found</h2>
+          <Button asChild>
+            <Link to="/profile">Back to Profile</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const otherUserId = chat.buyer_id === user?.id ? chat.seller_id : chat.buyer_id;
+  const isUserBuyer = chat.buyer_id === user?.id;
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">AI Car Assistant</h1>
-          <p className="text-lg text-muted-foreground">
-            Get instant help with car buying, selling, and automotive questions
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <Button asChild variant="ghost" className="flex items-center gap-2">
+            <Link to="/profile">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Profile
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="flex items-center gap-2">
+            <Link to="/">
+              <Home className="w-4 h-4" />
+              Home
+            </Link>
+          </Button>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <Card className="h-[600px] flex flex-col">
-            <CardHeader className="border-b border-border">
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                Chat with AI Assistant
-              </CardTitle>
-            </CardHeader>
-            
-            <CardContent className="flex-1 p-0">
-              <ScrollArea className="h-[480px] p-4">
-                <div className="space-y-4">
-                  {messages.map((message) => (
+        <Card className="h-[600px] flex flex-col">
+          {/* Chat Header */}
+          <CardHeader className="border-b">
+            <CardTitle className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg">
+                  {chat.cars.year} {chat.cars.make} {chat.cars.model}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  ${chat.cars.price.toLocaleString()} • {isUserBuyer ? "Seller" : "Buyer"} Chat
+                </p>
+              </div>
+            </CardTitle>
+          </CardHeader>
+
+          {/* Messages */}
+          <CardContent className="flex-1 p-0">
+            <ScrollArea className="h-full p-4">
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${
+                      message.sender_id === user?.id ? "justify-end" : "justify-start"
+                    }`}
+                  >
                     <div
-                      key={message.id}
-                      className={`flex gap-3 ${
-                        message.role === "user" ? "justify-end" : "justify-start"
+                      className={`max-w-[70%] rounded-lg p-3 ${
+                        message.sender_id === user?.id
+                          ? "bg-primary text-primary-foreground ml-4"
+                          : "bg-muted mr-4"
                       }`}
                     >
-                      {message.role === "assistant" && (
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            <Bot className="w-4 h-4" />
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                      
-                      <div
-                        className={`max-w-[70%] rounded-lg p-3 ${
-                          message.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
+                      <p className="text-sm">{message.message}</p>
+                      <p
+                        className={`text-xs mt-1 ${
+                          message.sender_id === user?.id
+                            ? "text-primary-foreground/70"
+                            : "text-muted-foreground"
                         }`}
                       >
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs opacity-60 mt-1">
-                          {message.timestamp.toLocaleTimeString()}
-                        </p>
-                      </div>
-                      
-                      {message.role === "user" && (
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="bg-secondary text-secondary-foreground">
-                            <User className="w-4 h-4" />
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
+                        {new Date(message.created_at).toLocaleTimeString()}
+                      </p>
                     </div>
-                  ))}
-                  
-                  {isLoading && (
-                    <div className="flex gap-3 justify-start">
-                      <Avatar className="w-8 h-8">
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          <Bot className="w-4 h-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="max-w-[70%] rounded-lg p-3 bg-muted">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-            
-            <div className="p-4 border-t border-border">
-              <form onSubmit={handleSendMessage} className="flex gap-2">
-                <Input
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Ask me anything about cars..."
-                  disabled={isLoading}
-                  className="flex-1"
-                />
-                <Button type="submit" disabled={isLoading || !inputMessage.trim()}>
-                  <Send className="w-4 h-4" />
-                </Button>
-              </form>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+          </CardContent>
+
+          {/* Message Input */}
+          <div className="p-4 border-t">
+            <div className="flex gap-2">
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                className="flex-1"
+              />
+              <Button onClick={sendMessage} disabled={!newMessage.trim()}>
+                <Send className="w-4 h-4" />
+              </Button>
             </div>
-          </Card>
-        </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, SlidersHorizontal, Heart, Eye, MessageCircle, Fuel, Gauge, Calendar } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, Heart, Eye, MessageCircle, Fuel, Gauge, Calendar, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -97,11 +97,19 @@ const BuyCars = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Buy Cars</h1>
-          <p className="text-lg text-muted-foreground">
-            Find your perfect car from our extensive collection
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-4">Buy Cars</h1>
+            <p className="text-lg text-muted-foreground">
+              Find your perfect car from our extensive collection
+            </p>
+          </div>
+          <Button asChild variant="outline" className="flex items-center gap-2">
+            <Link to="/">
+              <Home className="w-4 h-4" />
+              Home
+            </Link>
+          </Button>
         </div>
 
         {/* Search and Filters */}

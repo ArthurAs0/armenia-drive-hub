@@ -22,6 +22,7 @@ interface Car {
   featured: boolean;
   verified: boolean;
   description: string | null;
+  user_id: string;
 }
 
 const CarDetails = () => {
@@ -86,6 +87,57 @@ const CarDetails = () => {
       setIsFavorite(!!data);
     } catch (error) {
       console.error('Error checking favorite:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to send messages",
+        variant: "destructive",
+      });
+      window.location.href = "/auth";
+      return;
+    }
+
+    if (!car) return;
+
+    try {
+      // Check if chat already exists
+      const { data: existingChat } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('car_id', car.id)
+        .eq('buyer_id', user.id)
+        .maybeSingle();
+
+      if (existingChat) {
+        window.location.href = `/chat/${existingChat.id}`;
+        return;
+      }
+
+      // Create new chat
+      const { data: newChat, error } = await supabase
+        .from('chats')
+        .insert([{
+          car_id: car.id,
+          buyer_id: user.id,
+          seller_id: car.user_id
+        }])
+        .select('id')
+        .single();
+
+      if (error) throw error;
+
+      window.location.href = `/chat/${newChat.id}`;
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start conversation",
+        variant: "destructive",
+      });
     }
   };
 
@@ -359,7 +411,7 @@ const CarDetails = () => {
                   <Button 
                     variant="outline" 
                     className="w-full flex items-center gap-2"
-                    onClick={() => window.open('/chat', '_blank')}
+                    onClick={handleSendMessage}
                   >
                     <MessageCircle className="w-4 h-4" />
                     Send Message

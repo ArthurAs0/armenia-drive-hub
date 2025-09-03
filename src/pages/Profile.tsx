@@ -205,10 +205,11 @@ const Profile = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="listings">My Listings</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
+            <TabsTrigger value="chats">Chats</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -400,6 +401,24 @@ const Profile = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="chats" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Conversations</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 text-center">
+                <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Manage Your Chats</h3>
+                <p className="text-muted-foreground mb-4">
+                  View and manage all your conversations with buyers and sellers
+                </p>
+                <Button onClick={() => navigate('/chats')}>
+                  View All Chats
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">

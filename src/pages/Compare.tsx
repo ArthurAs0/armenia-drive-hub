@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, X, Car, Fuel, Gauge, Calendar, MapPin, DollarSign } from "lucide-react";
+import { Plus, X, Car, Fuel, Gauge, Calendar, MapPin, DollarSign, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -126,11 +127,19 @@ const Compare = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Compare Cars</h1>
-          <p className="text-lg text-muted-foreground">
-            Compare up to 3 cars side by side to make the best decision
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-4">Compare Cars</h1>
+            <p className="text-lg text-muted-foreground">
+              Compare up to 3 cars side by side to make the best decision
+            </p>
+          </div>
+          <Button asChild variant="outline" className="flex items-center gap-2">
+            <Link to="/">
+              <Home className="w-4 h-4" />
+              Home
+            </Link>
+          </Button>
         </div>
 
         {/* Add Cars Section */}

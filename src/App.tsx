@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import BuyCars from "./pages/BuyCars";
 import SellCar from "./pages/SellCar";
 import Chat from "./pages/Chat";
+import ChatList from "./pages/ChatList";
 import Compare from "./pages/Compare";
 import Profile from "./pages/Profile";
 import CarDetails from "./pages/CarDetails";
@@ -26,7 +27,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/buy" element={<BuyCars />} />
           <Route path="/sell" element={<SellCar />} />
-          <Route path="/chat" element={<Chat />} />
+          <Route path="/chat/:chatId" element={<Chat />} />
+          <Route path="/chats" element={<ChatList />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/car/:id" element={<CarDetails />} />
