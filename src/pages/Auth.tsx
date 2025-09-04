@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Home } from "lucide-react";
 
 type AuthFormValues = {
   email: string;
@@ -98,8 +99,14 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-background/80 backdrop-blur">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Create your account or sign in</h1>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/" className="flex items-center gap-2">
+              <Home className="w-4 h-4" />
+              Home
+            </Link>
+          </Button>
         </div>
       </header>
 

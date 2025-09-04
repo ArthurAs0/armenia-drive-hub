@@ -48,7 +48,7 @@ const Hero = () => {
                 placeholder="Search by make, model, or year..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-background border-border text-lg py-3"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground text-lg py-3"
               />
             </div>
 
@@ -59,7 +59,7 @@ const Hero = () => {
                   placeholder="Location (e.g., Yerevan, Gyumri)" 
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="pl-10 bg-background border-border"
+                  className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
               <Button 

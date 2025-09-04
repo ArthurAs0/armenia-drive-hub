@@ -320,14 +320,14 @@ const Profile = () => {
                       </div>
                       
                       <div className="mt-4 space-y-2">
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={() => handleEditListing(car.id)}
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit Listing
-                        </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => handleViewCarDetails(car.id)}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        View Details
+                      </Button>
                         {car.verified && (
                           <Button 
                             variant="secondary" 
