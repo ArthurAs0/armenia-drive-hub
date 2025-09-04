@@ -103,22 +103,57 @@ const CarDetails = () => {
 
     if (!car) return;
 
+    // Check if the car has a valid seller
+    if (!car.user_id) {
+      console.error('Car has no seller assigned:', car);
+      toast({
+        title: "Error",
+        description: "This car listing has no seller information. Please contact support.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Prevent user from messaging themselves
+    if (car.user_id === user.id) {
+      toast({
+        title: "Cannot message yourself",
+        description: "You cannot start a conversation about your own car listing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      console.log('Attempting to create/find chat for:', {
+        car_id: car.id,
+        buyer_id: user.id,
+        seller_id: car.user_id
+      });
+
       // Check if chat already exists
-      const { data: existingChat } = await supabase
+      const { data: existingChat, error: fetchError } = await supabase
         .from('chats')
         .select('id')
         .eq('car_id', car.id)
         .eq('buyer_id', user.id)
+        .eq('seller_id', car.user_id)
         .maybeSingle();
 
+      if (fetchError) {
+        console.error('Error checking existing chat:', fetchError);
+        throw fetchError;
+      }
+
       if (existingChat) {
+        console.log('Found existing chat:', existingChat.id);
         window.location.href = `/chat/${existingChat.id}`;
         return;
       }
 
       // Create new chat
-      const { data: newChat, error } = await supabase
+      console.log('Creating new chat...');
+      const { data: newChat, error: insertError } = await supabase
         .from('chats')
         .insert([{
           car_id: car.id,
@@ -128,14 +163,18 @@ const CarDetails = () => {
         .select('id')
         .single();
 
-      if (error) throw error;
+      if (insertError) {
+        console.error('Error inserting new chat:', insertError);
+        throw insertError;
+      }
 
+      console.log('Successfully created chat:', newChat.id);
       window.location.href = `/chat/${newChat.id}`;
     } catch (error) {
       console.error('Error creating chat:', error);
       toast({
         title: "Error",
-        description: "Failed to start conversation",
+        description: `Failed to start conversation: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
