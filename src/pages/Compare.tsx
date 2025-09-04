@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, X, Car, Fuel, Gauge, Calendar, MapPin, DollarSign, Home } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CarData {
   id: number;
@@ -26,8 +27,65 @@ interface CarData {
 
 const Compare = () => {
   const [selectedCars, setSelectedCars] = useState<CarData[]>([]);
+  const [availableCars, setAvailableCars] = useState<CarData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
 
-  const availableCars: CarData[] = [
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
+  useEffect(() => {
+    // Check if car ID is in URL params and add it
+    const carIds = searchParams.get('cars');
+    if (carIds && availableCars.length > 0) {
+      const carIdArray = carIds.split(',');
+      const carsToAdd = availableCars.filter(car => 
+        carIdArray.includes(car.id.toString()) && 
+        !selectedCars.find(selected => selected.id === car.id)
+      );
+      if (carsToAdd.length > 0) {
+        setSelectedCars(prev => [...prev, ...carsToAdd]);
+      }
+    }
+  }, [searchParams, availableCars]);
+
+  const fetchCars = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedCars: CarData[] = (data || []).map(car => ({
+        id: parseInt(car.id),
+        make: car.make,
+        model: car.model,
+        year: car.year,
+        price: car.price,
+        image: car.image_url || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=300&h=200&fit=crop',
+        mileage: car.mileage,
+        fuel: car.fuel,
+        transmission: car.transmission,
+        location: car.location,
+        engine: "Modern Engine",
+        doors: 4,
+        seats: 5,
+        color: "Various",
+        bodyType: "Modern"
+      }));
+
+      setAvailableCars(formattedCars);
+    } catch (error) {
+      console.error('Error fetching cars:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mockCars: CarData[] = [
     {
       id: 1,
       make: "BMW",
@@ -99,7 +157,8 @@ const Compare = () => {
   ];
 
   const handleAddCar = (carId: string) => {
-    const car = availableCars.find(c => c.id.toString() === carId);
+    const allCars = [...availableCars, ...mockCars];
+    const car = allCars.find(c => c.id.toString() === carId);
     if (car && selectedCars.length < 3 && !selectedCars.find(c => c.id === car.id)) {
       setSelectedCars([...selectedCars, car]);
     }
@@ -122,6 +181,17 @@ const Compare = () => {
     { label: "Color", key: "color" },
     { label: "Location", key: "location" }
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading cars...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -157,7 +227,7 @@ const Compare = () => {
                   <SelectValue placeholder="Select a car to add to comparison" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableCars
+                  {[...availableCars, ...mockCars]
                     .filter(car => !selectedCars.find(selected => selected.id === car.id))
                     .map(car => (
                       <SelectItem key={car.id} value={car.id.toString()}>

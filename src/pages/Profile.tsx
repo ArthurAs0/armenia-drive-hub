@@ -158,7 +158,7 @@ const Profile = () => {
   };
 
   const handleEditListing = (carId: string) => {
-    navigate(`/sell-car?edit=${carId}`);
+    navigate(`/sell?edit=${carId}`);
   };
 
   const handleViewCarDetails = (carId: string) => {
@@ -273,7 +273,7 @@ const Profile = () => {
                   <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No listings yet</h3>
                   <p className="text-muted-foreground mb-4">Start selling your first car today!</p>
-                  <Button onClick={() => navigate('/sell-car')}>
+                  <Button onClick={() => navigate('/sell')}>
                     List Your First Car
                   </Button>
                 </CardContent>
@@ -353,7 +353,7 @@ const Profile = () => {
                   <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No favorites yet</h3>
                   <p className="text-muted-foreground mb-4">Start adding cars to your favorites to see them here!</p>
-                  <Button onClick={() => navigate('/buy-cars')}>
+                  <Button onClick={() => navigate('/buy')}>
                     Browse Cars
                   </Button>
                 </CardContent>

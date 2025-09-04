@@ -146,7 +146,7 @@ const ChatList = () => {
                 Start chatting with sellers or buyers to see conversations here
               </p>
               <Button asChild>
-                <Link to="/buy-cars">Browse Cars</Link>
+                <Link to="/buy">Browse Cars</Link>
               </Button>
             </CardContent>
           </Card>

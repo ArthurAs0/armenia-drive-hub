@@ -36,7 +36,7 @@ const Header = () => {
             <Link to="/buy" className="text-foreground hover:text-primary transition-colors text-sm lg:text-base">Buy</Link>
             <Link to="/sell" className="text-foreground hover:text-primary transition-colors text-sm lg:text-base">Sell</Link>
             <Link to="/compare" className="text-foreground hover:text-primary transition-colors text-sm lg:text-base">Compare</Link>
-            <Link to="/chat" className="text-foreground hover:text-primary transition-colors text-sm lg:text-base">Chat</Link>
+            <Link to="/chats" className="text-foreground hover:text-primary transition-colors text-sm lg:text-base">Chat</Link>
           </nav>
 
           {/* Action Buttons */}
@@ -98,14 +98,14 @@ const Header = () => {
                     <ArrowLeftRight className="w-5 h-5" />
                     Compare
                   </Link>
-                  <Link 
-                    to="/chats" 
-                    className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    Chats
-                  </Link>
+            <Link 
+              to="/chats" 
+              className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <MessageCircle className="w-5 h-5" />
+              Chats
+            </Link>
                   <Link 
                     to="/favorites" 
                     className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
