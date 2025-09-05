@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
+import { ChatsList } from "@/components/ChatsList";
 
 const Profile = () => {
   const { toast } = useToast();
@@ -404,21 +405,7 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="chats" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Conversations</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 text-center">
-                <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Manage Your Chats</h3>
-                <p className="text-muted-foreground mb-4">
-                  View and manage all your conversations with buyers and sellers
-                </p>
-                <Button onClick={() => navigate('/chats')}>
-                  View All Chats
-                </Button>
-              </CardContent>
-            </Card>
+            <ChatsList user={user} />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">

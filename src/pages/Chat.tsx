@@ -55,6 +55,28 @@ const Chat = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Set up real-time subscription for messages
+  useEffect(() => {
+    if (!chatId) return;
+
+    const channel = supabase
+      .channel('messages')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `chat_id=eq.${chatId}`
+      }, (payload) => {
+        console.log('New message received:', payload);
+        setMessages(prev => [...prev, payload.new as Message]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chatId]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -130,7 +152,7 @@ const Chat = () => {
       if (error) throw error;
 
       setNewMessage("");
-      fetchMessages(); // Refresh messages
+      // No need to refresh messages - real-time subscription will handle it
     } catch (error) {
       console.error("Error sending message:", error);
       toast({

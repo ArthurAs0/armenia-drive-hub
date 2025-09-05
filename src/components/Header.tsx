@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ThemeToggle } from "@/components/ThemeToggle";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -41,6 +42,7 @@ const Header = () => {
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-1 sm:space-x-2">
+            <ThemeToggle />
             <Button asChild variant="ghost" size="icon" className="flex">
               <Link to="/favorites">
                 <Heart className="w-4 h-4" />
