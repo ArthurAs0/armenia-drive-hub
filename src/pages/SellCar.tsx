@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Car, Upload, Camera, DollarSign, FileText, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,8 @@ const SellCar = () => {
     phone: "",
     email: ""
   });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     checkUser();
@@ -52,6 +54,23 @@ const SellCar = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 10) {
+      toast({
+        title: "Too many files",
+        description: "You can upload up to 10 photos",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSelectedFiles(files);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -59,6 +78,17 @@ const SellCar = () => {
       toast({
         title: "Authentication required",
         description: "Please sign in to sell your car",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.make || !formData.model || !formData.year || !formData.price || 
+        !formData.fuel || !formData.transmission || !formData.location || !formData.mileage) {
+      toast({
+        title: "Missing required fields",
+        description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
@@ -82,7 +112,7 @@ const SellCar = () => {
           image_url: `https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop&auto=format&q=80`,
           featured: false,
           verified: false,
-          seller_id: user.id
+          user_id: user.id
         }]);
 
       if (error) throw error;
@@ -107,6 +137,7 @@ const SellCar = () => {
         phone: "",
         email: ""
       });
+      setSelectedFiles([]);
       
       // Navigate to profile to see the listing
       navigate('/profile');
@@ -344,7 +375,18 @@ const SellCar = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <div 
+                    className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={handleFileSelect}
+                  >
                     <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground mb-2">
                       Drag and drop photos here, or click to browse
@@ -352,10 +394,24 @@ const SellCar = () => {
                     <p className="text-sm text-muted-foreground">
                       Upload up to 10 photos (JPG, PNG)
                     </p>
-                    <Button variant="outline" className="mt-4">
-                      Choose Files
+                    <Button type="button" variant="outline" className="mt-4" onClick={handleFileSelect}>
+                      Select Files
                     </Button>
                   </div>
+                  {selectedFiles.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} selected:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedFiles.map((file, index) => (
+                          <span key={index} className="text-xs bg-secondary px-2 py-1 rounded">
+                            {file.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
