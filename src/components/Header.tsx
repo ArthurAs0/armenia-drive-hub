@@ -7,7 +7,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ThemeToggle";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   return <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
@@ -15,7 +14,7 @@ const Header = () => {
           <div className="flex items-center space-x-2">
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">AC</span>
+                <span className="text-primary-foreground font-bold text-lg">SD</span>
               </div>
               <span className="text-xl font-bold text-primary">StartDrive</span>
             </Link>
@@ -25,10 +24,7 @@ const Header = () => {
           <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input 
-                placeholder="Search cars, brands, models..." 
-                className="pl-10 pr-4 bg-background text-foreground placeholder:text-muted-foreground border-border"
-              />
+              <Input placeholder="Search cars, brands, models..." className="pl-10 pr-4 bg-background text-foreground placeholder:text-muted-foreground border-border" />
             </div>
           </div>
 
@@ -68,59 +64,31 @@ const Header = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <nav className="flex flex-col gap-4 mt-6">
-                  <Link 
-                    to="/" 
-                    className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/" className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                     <Home className="w-5 h-5" />
                     Home
                   </Link>
-                  <Link 
-                    to="/buy" 
-                    className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/buy" className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                     <Car className="w-5 h-5" />
                     Buy Cars
                   </Link>
-                  <Link 
-                    to="/sell" 
-                    className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/sell" className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                     <Car className="w-5 h-5" />
                     Sell Car
                   </Link>
-                  <Link 
-                    to="/compare" 
-                    className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/compare" className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                     <ArrowLeftRight className="w-5 h-5" />
                     Compare
                   </Link>
-            <Link 
-              to="/chats" 
-              className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
+            <Link to="/chats" className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
               <MessageCircle className="w-5 h-5" />
               Chats
             </Link>
-                  <Link 
-                    to="/favorites" 
-                    className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/favorites" className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                     <Heart className="w-5 h-5" />
                     Favorites
                   </Link>
-                  <Link 
-                    to="/profile" 
-                    className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/profile" className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
                     <User className="w-5 h-5" />
                     Profile
                   </Link>
@@ -134,10 +102,7 @@ const Header = () => {
         <div className="md:hidden mt-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input 
-              placeholder="Search cars, brands, models..." 
-              className="pl-10 pr-4 bg-background text-foreground placeholder:text-muted-foreground border-border" 
-            />
+            <Input placeholder="Search cars, brands, models..." className="pl-10 pr-4 bg-background text-foreground placeholder:text-muted-foreground border-border" />
           </div>
         </div>
       </div>
