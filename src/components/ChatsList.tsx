@@ -17,7 +17,7 @@ interface ChatData {
     model: string;
     year: number;
     price: number;
-    image_url: string | null;
+    images: string[];
   };
   last_message?: {
     message: string;
@@ -50,7 +50,7 @@ export const ChatsList = ({ user }: ChatsListProps) => {
         .from("chats")
         .select(`
           *,
-          cars (make, model, year, price, image_url)
+          cars (make, model, year, price, images)
         `)
         .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
         .order("updated_at", { ascending: false });
@@ -141,7 +141,7 @@ export const ChatsList = ({ user }: ChatsListProps) => {
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
                   <img
-                    src={chat.cars.image_url || "/api/placeholder/80/60"}
+                    src={chat.cars.images?.[0] || "/api/placeholder/80/60"}
                     alt={`${chat.cars.make} ${chat.cars.model}`}
                     className="w-16 h-12 object-cover rounded"
                     onError={(e) => {

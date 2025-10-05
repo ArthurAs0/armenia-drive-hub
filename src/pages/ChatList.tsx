@@ -18,7 +18,7 @@ interface ChatListItem {
     model: string;
     year: number;
     price: number;
-    image_url: string | null;
+    images: string[];
   };
   last_message?: {
     message: string;
@@ -63,7 +63,7 @@ const ChatList = () => {
         .from("chats")
         .select(`
           *,
-          cars (make, model, year, price, image_url)
+          cars (make, model, year, price, images)
         `)
         .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
         .order("updated_at", { ascending: false });
@@ -166,7 +166,7 @@ const ChatList = () => {
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
                         <img
                           src={
-                            chat.cars.image_url ||
+                            chat.cars.images?.[0] ||
                             "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=100&h=100&fit=crop"
                           }
                           alt={`${chat.cars.make} ${chat.cars.model}`}

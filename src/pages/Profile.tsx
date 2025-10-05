@@ -21,7 +21,7 @@ const Profile = () => {
   const [myListings, setMyListings] = useState<any[]>([]);
   const [favoriteCarsData, setFavoriteCarsData] = useState<any[]>([]);
   const [profile, setProfile] = useState({
-    full_name: "",
+    display_name: "",
     phone: "",
     location: ""
   });
@@ -50,9 +50,9 @@ const Profile = () => {
       
       if (profileData) {
         setProfile({
-          full_name: profileData.full_name || "",
-          phone: "",
-          location: ""
+          display_name: profileData.display_name || "",
+          phone: profileData.phone || "",
+          location: profileData.location || ""
         });
       }
       
@@ -73,7 +73,7 @@ const Profile = () => {
       const { data, error } = await supabase
         .from("cars")
         .select("*")
-        .eq("user_id", userId)
+        .eq("seller_id", userId)
         .order("created_at", { ascending: false });
       
       if (error) throw error;
@@ -109,11 +109,13 @@ const Profile = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      const { error} = await supabase
         .from("profiles")
         .upsert({
           user_id: user.id,
-          full_name: profile.full_name,
+          display_name: profile.display_name,
+          phone: profile.phone,
+          location: profile.location,
           updated_at: new Date().toISOString()
         });
 
@@ -136,9 +138,9 @@ const Profile = () => {
     try {
       const { error } = await supabase
         .from("cars")
-        .update({ verified: false })
+        .update({ is_sold: true })
         .eq("id", carId)
-        .eq("user_id", user?.id);
+        .eq("seller_id", user?.id);
 
       if (error) throw error;
 
@@ -188,12 +190,12 @@ const Profile = () => {
               <Avatar className="w-16 h-16">
                 <AvatarImage src={user?.user_metadata?.avatar_url} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                  {profile.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                  {profile.display_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  {profile.full_name || "User Profile"}
+                  {profile.display_name || "User Profile"}
                 </h1>
                 <p className="text-muted-foreground">{user?.email}</p>
               </div>
@@ -418,12 +420,12 @@ const Profile = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName">Display Name</Label>
                   <Input
                     id="fullName"
-                    value={profile.full_name}
-                    onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
-                    placeholder="Enter your full name"
+                    value={profile.display_name}
+                    onChange={(e) => setProfile(prev => ({ ...prev, display_name: e.target.value }))}
+                    placeholder="Enter your display name"
                   />
                 </div>
 

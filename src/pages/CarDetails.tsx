@@ -14,15 +14,15 @@ interface Car {
   model: string;
   year: number;
   price: number;
-  image_url: string | null;
-  mileage: string;
-  fuel: string;
+  images: string[];
+  mileage: number;
+  fuel_type: string;
   transmission: string;
   location: string;
-  featured: boolean;
+  is_featured: boolean;
   verified: boolean;
   description: string | null;
-  user_id: string;
+  seller_id: string;
 }
 
 const CarDetails = () => {
@@ -104,7 +104,7 @@ const CarDetails = () => {
     if (!car) return;
 
     // Check if the car has a valid seller
-    if (!car.user_id) {
+    if (!car.seller_id) {
       console.error('Car has no seller assigned:', car);
       toast({
         title: "Error",
@@ -115,7 +115,7 @@ const CarDetails = () => {
     }
 
     // Prevent user from messaging themselves
-    if (car.user_id === user.id) {
+    if (car.seller_id === user.id) {
       toast({
         title: "Cannot message yourself",
         description: "You cannot start a conversation about your own car listing.",
@@ -128,7 +128,7 @@ const CarDetails = () => {
       console.log('Attempting to create/find chat for:', {
         car_id: car.id,
         buyer_id: user.id,
-        seller_id: car.user_id
+        seller_id: car.seller_id
       });
 
       // Check if chat already exists
@@ -137,7 +137,7 @@ const CarDetails = () => {
         .select('id')
         .eq('car_id', car.id)
         .eq('buyer_id', user.id)
-        .eq('seller_id', car.user_id)
+        .eq('seller_id', car.seller_id)
         .maybeSingle();
 
       if (fetchError) {
@@ -158,7 +158,7 @@ const CarDetails = () => {
         .insert([{
           car_id: car.id,
           buyer_id: user.id,
-          seller_id: car.user_id
+          seller_id: car.seller_id
         }])
         .select('id')
         .single();
@@ -266,7 +266,7 @@ const CarDetails = () => {
     "Engine": "Modern Engine",
     "Power": "High Performance",
     "Transmission": car.transmission,
-    "Fuel Type": car.fuel,
+    "Fuel Type": car.fuel_type,
     "Year": car.year.toString(),
     "Mileage": car.mileage,
     "Location": car.location
@@ -299,12 +299,12 @@ const CarDetails = () => {
               <CardContent className="p-0">
                 <div className="relative">
                   <img 
-                    src={car.image_url || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop'} 
+                    src={car.images?.[0] || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop'} 
                     alt={`${car.make} ${car.model}`}
                     className="w-full h-96 object-cover rounded-lg"
                   />
                   <div className="absolute top-4 left-4 flex gap-2">
-                    {car.featured && (
+                    {car.is_featured && (
                       <Badge className="bg-accent text-accent-foreground">Featured</Badge>
                     )}
                     {car.verified && (
@@ -360,7 +360,7 @@ const CarDetails = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Fuel className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm">{car.fuel}</span>
+                    <span className="text-sm">{car.fuel_type}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Car className="w-4 h-4 text-muted-foreground" />
@@ -373,7 +373,7 @@ const CarDetails = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Description</h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    {car.description || `This ${car.year} ${car.make} ${car.model} is in excellent condition with ${car.mileage}. Features ${car.fuel} engine with ${car.transmission} transmission. Located in ${car.location}.`}
+                    {car.description || `This ${car.year} ${car.make} ${car.model} is in excellent condition with ${car.mileage} km. Features ${car.fuel_type} engine with ${car.transmission} transmission. Located in ${car.location}.`}
                   </p>
                 </div>
               </CardContent>

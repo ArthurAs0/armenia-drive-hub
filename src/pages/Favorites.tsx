@@ -13,14 +13,15 @@ interface Car {
   model: string;
   year: number;
   price: number;
-  image_url: string | null;
-  mileage: string;
-  fuel: string;
+  images: string[];
+  mileage: number;
+  fuel_type: string;
   transmission: string;
   location: string;
-  featured: boolean;
+  is_featured: boolean;
   verified: boolean;
   created_at: string;
+  seller_id: string;
 }
 
 const Favorites = () => {
@@ -191,12 +192,12 @@ const Favorites = () => {
                   <Card key={car.id} className="group hover:shadow-elegant transition-all duration-300 overflow-hidden bg-gradient-card border-border/50">
                     <div className="relative">
                       <img 
-                        src={car.image_url || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop'} 
+                        src={car.images?.[0] || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop'} 
                         alt={`${car.make} ${car.model}`}
                         className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute top-3 left-3 flex gap-2">
-                        {car.featured && (
+                        {car.is_featured && (
                           <Badge className="bg-accent text-accent-foreground font-semibold">
                             Featured
                           </Badge>
@@ -244,7 +245,7 @@ const Favorites = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Fuel className="w-3 h-3" />
-                        <span>{car.fuel}</span>
+                        <span>{car.fuel_type}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
