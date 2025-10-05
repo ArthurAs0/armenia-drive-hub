@@ -16,103 +16,87 @@ export type Database = {
     Tables: {
       cars: {
         Row: {
+          body_type: string | null
+          color: string | null
+          condition: string | null
           created_at: string
           description: string | null
-          featured: boolean | null
-          fuel: string
+          fuel_type: string
           id: string
-          image_url: string | null
+          images: string[] | null
+          is_featured: boolean | null
+          is_sold: boolean | null
           location: string
           make: string
-          mileage: string
+          mileage: number
           model: string
           price: number
+          seller_id: string
           transmission: string
           updated_at: string
-          user_id: string | null
-          verified: boolean | null
           year: number
         }
         Insert: {
+          body_type?: string | null
+          color?: string | null
+          condition?: string | null
           created_at?: string
           description?: string | null
-          featured?: boolean | null
-          fuel: string
+          fuel_type: string
           id?: string
-          image_url?: string | null
+          images?: string[] | null
+          is_featured?: boolean | null
+          is_sold?: boolean | null
           location: string
           make: string
-          mileage: string
+          mileage: number
           model: string
           price: number
+          seller_id: string
           transmission: string
           updated_at?: string
-          user_id?: string | null
-          verified?: boolean | null
           year: number
         }
         Update: {
+          body_type?: string | null
+          color?: string | null
+          condition?: string | null
           created_at?: string
           description?: string | null
-          featured?: boolean | null
-          fuel?: string
+          fuel_type?: string
           id?: string
-          image_url?: string | null
+          images?: string[] | null
+          is_featured?: boolean | null
+          is_sold?: boolean | null
           location?: string
           make?: string
-          mileage?: string
+          mileage?: number
           model?: string
           price?: number
+          seller_id?: string
           transmission?: string
           updated_at?: string
-          user_id?: string | null
-          verified?: boolean | null
           year?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "cars_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
-      chats: {
+      Carsid: {
         Row: {
-          buyer_id: string
-          car_id: string
+          carsname: string | null
           created_at: string
-          id: string
-          seller_id: string
-          updated_at: string
+          id: number
         }
         Insert: {
-          buyer_id: string
-          car_id: string
+          carsname?: string | null
           created_at?: string
-          id?: string
-          seller_id: string
-          updated_at?: string
+          id?: number
         }
         Update: {
-          buyer_id?: string
-          car_id?: string
+          carsname?: string | null
           created_at?: string
-          id?: string
-          seller_id?: string
-          updated_at?: string
+          id?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "chats_car_id_fkey"
-            columns: ["car_id"]
-            isOneToOne: false
-            referencedRelation: "cars"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       favorites: {
         Row: {
@@ -141,83 +125,38 @@ export type Database = {
             referencedRelation: "cars"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "favorites_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      messages: {
-        Row: {
-          chat_id: string
-          created_at: string
-          id: string
-          message: string
-          sender_id: string
-        }
-        Insert: {
-          chat_id: string
-          created_at?: string
-          id?: string
-          message: string
-          sender_id: string
-        }
-        Update: {
-          chat_id?: string
-          created_at?: string
-          id?: string
-          message?: string
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
         ]
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
-          full_name: string | null
+          display_name: string | null
           id: string
+          location: string | null
+          phone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
-          full_name?: string | null
+          display_name?: string | null
           id?: string
+          location?: string | null
+          phone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
-          full_name?: string | null
+          display_name?: string | null
           id?: string
+          location?: string | null
+          phone?: string | null
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      test1: {
-        Row: {
-          content: string
-          id: number
-        }
-        Insert: {
-          content: string
-          id?: number
-        }
-        Update: {
-          content?: string
-          id?: number
         }
         Relationships: []
       }
