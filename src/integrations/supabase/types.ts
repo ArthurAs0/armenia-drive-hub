@@ -34,6 +34,7 @@ export type Database = {
           seller_id: string
           transmission: string
           updated_at: string
+          verified: boolean | null
           year: number
         }
         Insert: {
@@ -55,6 +56,7 @@ export type Database = {
           seller_id: string
           transmission: string
           updated_at?: string
+          verified?: boolean | null
           year: number
         }
         Update: {
@@ -76,27 +78,45 @@ export type Database = {
           seller_id?: string
           transmission?: string
           updated_at?: string
+          verified?: boolean | null
           year?: number
         }
         Relationships: []
       }
-      Carsid: {
+      chats: {
         Row: {
-          carsname: string | null
+          buyer_id: string
+          car_id: string
           created_at: string
-          id: number
+          id: string
+          seller_id: string
+          updated_at: string
         }
         Insert: {
-          carsname?: string | null
+          buyer_id: string
+          car_id: string
           created_at?: string
-          id?: number
+          id?: string
+          seller_id: string
+          updated_at?: string
         }
         Update: {
-          carsname?: string | null
+          buyer_id?: string
+          car_id?: string
           created_at?: string
-          id?: number
+          id?: string
+          seller_id?: string
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chats_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       favorites: {
         Row: {
@@ -123,6 +143,38 @@ export type Database = {
             columns: ["car_id"]
             isOneToOne: false
             referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
             referencedColumns: ["id"]
           },
         ]

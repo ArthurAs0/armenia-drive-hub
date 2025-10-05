@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Home } from "lucide-react";
+import { z } from "zod";
+
+const authSchema = z.object({
+  email: z.string().email("Invalid email address").max(255),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  full_name: z.string().max(100).optional(),
+});
 
 type AuthFormValues = {
   email: string;
@@ -64,15 +71,16 @@ export default function Auth() {
   }, [navigate]);
 
   const onSubmit = async (values: AuthFormValues) => {
-    const email = values.email.trim();
-    const password = values.password;
-
-    if (!email || !password) {
-      toast.error("Please enter your email and password.");
-      return;
-    }
-
     try {
+      // Validate with zod
+      const validated = authSchema.parse({
+        email: values.email.trim(),
+        password: values.password,
+        full_name: values.full_name?.trim(),
+      });
+
+      const email = validated.email;
+      const password = validated.password;
       if (mode === "signup") {
         const redirectUrl = `${window.location.origin}/`;
         const { error } = await supabase.auth.signUp({
@@ -80,7 +88,7 @@ export default function Auth() {
           password,
           options: {
             emailRedirectTo: redirectUrl,
-            data: { full_name: values.full_name?.trim() || null },
+            data: { full_name: validated.full_name || null },
           },
         });
         if (error) throw error;
@@ -92,7 +100,11 @@ export default function Auth() {
         navigate("/");
       }
     } catch (err: any) {
-      toast.error(err?.message || "Something went wrong. Please try again.");
+      if (err instanceof z.ZodError) {
+        toast.error(err.errors[0].message);
+      } else {
+        toast.error(err?.message || "Something went wrong. Please try again.");
+      }
     }
   };
 

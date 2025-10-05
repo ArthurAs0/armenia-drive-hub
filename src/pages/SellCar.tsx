@@ -9,6 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
+
+const carListingSchema = z.object({
+  make: z.string().trim().min(1, "Make is required").max(50),
+  model: z.string().trim().min(1, "Model is required").max(50),
+  year: z.number().int().min(1900).max(new Date().getFullYear() + 1),
+  price: z.number().positive("Price must be positive").max(10000000),
+  mileage: z.number().int().nonnegative("Mileage cannot be negative").max(1000000),
+  fuel_type: z.enum(['Petrol', 'Diesel', 'Hybrid', 'Electric', 'LPG']),
+  transmission: z.enum(['Automatic', 'Manual', 'CVT']),
+  location: z.string().min(1, "Location is required"),
+  description: z.string().max(5000).optional(),
+  color: z.string().max(30).optional(),
+});
 
 const SellCar = () => {
   const { toast } = useToast();
@@ -83,36 +97,38 @@ const SellCar = () => {
       return;
     }
 
-    // Validate required fields
-    if (!formData.make || !formData.model || !formData.year || !formData.price || 
-        !formData.fuel || !formData.transmission || !formData.location || !formData.mileage) {
-      toast({
-        title: "Missing required fields",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
     
     try {
+      // Validate with zod
+      const validated = carListingSchema.parse({
+        make: formData.make,
+        model: formData.model,
+        year: parseInt(formData.year),
+        price: parseInt(formData.price),
+        mileage: parseInt(formData.mileage),
+        fuel_type: formData.fuel,
+        transmission: formData.transmission,
+        location: formData.location,
+        description: formData.description || undefined,
+        color: formData.color || undefined,
+      });
+
       const { data, error } = await supabase
         .from('cars')
         .insert([{
-          make: formData.make,
-          model: formData.model,
-          year: parseInt(formData.year),
-          price: parseInt(formData.price),
-          mileage: formData.mileage,
-          fuel: formData.fuel,
-          transmission: formData.transmission,
-          location: formData.location,
-          description: formData.description,
-          image_url: `https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop&auto=format&q=80`,
-          featured: false,
-          verified: false,
-          user_id: user.id
+          make: validated.make,
+          model: validated.model,
+          year: validated.year,
+          price: validated.price,
+          mileage: validated.mileage,
+          fuel_type: validated.fuel_type,
+          transmission: validated.transmission,
+          location: validated.location,
+          description: validated.description,
+          color: validated.color,
+          images: [],
+          seller_id: user.id
         }]);
 
       if (error) throw error;
@@ -144,11 +160,19 @@ const SellCar = () => {
       
     } catch (error) {
       console.error('Error creating listing:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create listing. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create listing. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
