@@ -29,6 +29,8 @@ const SellCar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [carId, setCarId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     make: "",
     model: "",
@@ -44,10 +46,20 @@ const SellCar = () => {
     email: ""
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     checkUser();
+    
+    // Check if we're in edit mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const editCarId = urlParams.get('edit');
+    if (editCarId) {
+      setEditMode(true);
+      setCarId(editCarId);
+      loadCarData(editCarId);
+    }
   }, []);
 
   const checkUser = async () => {
@@ -62,6 +74,43 @@ const SellCar = () => {
       return;
     }
     setUser(session.user);
+  };
+
+  const loadCarData = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (data) {
+        setFormData({
+          make: data.make || "",
+          model: data.model || "",
+          year: data.year?.toString() || "",
+          mileage: data.mileage?.toString() || "",
+          price: data.price?.toString() || "",
+          fuel: data.fuel_type || "",
+          transmission: data.transmission || "",
+          color: data.color || "",
+          location: data.location || "",
+          description: data.description || "",
+          phone: "",
+          email: ""
+        });
+        setExistingImages(data.images || []);
+      }
+    } catch (error) {
+      console.error('Error loading car data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load car data",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -114,8 +163,8 @@ const SellCar = () => {
         color: formData.color || undefined,
       });
 
-      // Upload images to storage
-      const imageUrls: string[] = [];
+      // Upload new images to storage
+      const imageUrls: string[] = [...existingImages];
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           const fileExt = file.name.split('.').pop();
@@ -138,29 +187,58 @@ const SellCar = () => {
         }
       }
 
-      const { data, error } = await supabase
-        .from('cars')
-        .insert([{
-          make: validated.make,
-          model: validated.model,
-          year: validated.year,
-          price: validated.price,
-          mileage: validated.mileage,
-          fuel_type: validated.fuel_type,
-          transmission: validated.transmission,
-          location: validated.location,
-          description: validated.description,
-          color: validated.color,
-          images: imageUrls,
-          seller_id: user.id
-        }]);
+      if (editMode && carId) {
+        // Update existing car
+        const { error } = await supabase
+          .from('cars')
+          .update({
+            make: validated.make,
+            model: validated.model,
+            year: validated.year,
+            price: validated.price,
+            mileage: validated.mileage,
+            fuel_type: validated.fuel_type,
+            transmission: validated.transmission,
+            location: validated.location,
+            description: validated.description,
+            color: validated.color,
+            images: imageUrls,
+          })
+          .eq('id', carId)
+          .eq('seller_id', user.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Car listed successfully!",
-        description: "Your car has been listed and is now available for buyers to view.",
-      });
+        toast({
+          title: "Car updated successfully!",
+          description: "Your listing has been updated.",
+        });
+      } else {
+        // Create new car listing
+        const { error } = await supabase
+          .from('cars')
+          .insert([{
+            make: validated.make,
+            model: validated.model,
+            year: validated.year,
+            price: validated.price,
+            mileage: validated.mileage,
+            fuel_type: validated.fuel_type,
+            transmission: validated.transmission,
+            location: validated.location,
+            description: validated.description,
+            color: validated.color,
+            images: imageUrls,
+            seller_id: user.id
+          }]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Car listed successfully!",
+          description: "Your car has been listed and is now available for buyers to view.",
+        });
+      }
       
       // Reset form
       setFormData({
@@ -178,6 +256,7 @@ const SellCar = () => {
         email: ""
       });
       setSelectedFiles([]);
+      setExistingImages([]);
       
       // Navigate to profile to see the listing
       navigate('/profile');
@@ -193,7 +272,7 @@ const SellCar = () => {
       } else {
         toast({
           title: "Error",
-          description: "Failed to create listing. Please try again.",
+          description: editMode ? "Failed to update listing. Please try again." : "Failed to create listing. Please try again.",
           variant: "destructive",
         });
       }
@@ -237,9 +316,11 @@ const SellCar = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Sell Your Car</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            {editMode ? 'Edit Your Car Listing' : 'Sell Your Car'}
+          </h1>
           <p className="text-lg text-muted-foreground">
-            List your car and reach thousands of potential buyers
+            {editMode ? 'Update your car listing details' : 'List your car and reach thousands of potential buyers'}
           </p>
         </div>
 
@@ -431,6 +512,31 @@ const SellCar = () => {
                     onChange={handleFileChange}
                     className="hidden"
                   />
+                  
+                  {existingImages.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium mb-2">Current Images:</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {existingImages.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img 
+                              src={url} 
+                              alt={`Car ${index + 1}`}
+                              className="w-full h-24 object-cover rounded"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setExistingImages(prev => prev.filter((_, i) => i !== index))}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div 
                     className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={handleFileSelect}
@@ -449,7 +555,7 @@ const SellCar = () => {
                   {selectedFiles.length > 0 && (
                     <div className="mt-4">
                       <p className="text-sm text-muted-foreground mb-2">
-                        {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} selected:
+                        {selectedFiles.length} new file{selectedFiles.length !== 1 ? 's' : ''} selected:
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {selectedFiles.map((file, index) => (
@@ -490,7 +596,7 @@ const SellCar = () => {
           {/* Submit */}
           <div className="flex justify-center">
             <Button type="submit" size="lg" className="px-12" disabled={loading}>
-              {loading ? "Creating Listing..." : "List My Car"}
+              {loading ? "Processing..." : editMode ? "Update Listing" : "List My Car"}
             </Button>
           </div>
         </form>

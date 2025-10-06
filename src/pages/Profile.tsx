@@ -287,7 +287,7 @@ const Profile = () => {
                   <Card key={car.id}>
                     <div className="relative">
                       <img 
-                        src={car.image_url || "/api/placeholder/300/200"} 
+                        src={car.images?.[0] || "/api/placeholder/300/200"} 
                         alt={`${car.make} ${car.model}`}
                         className="w-full h-48 object-cover rounded-t-lg"
                         onError={(e) => {
@@ -296,12 +296,12 @@ const Profile = () => {
                       />
                       <Badge 
                         className={`absolute top-3 right-3 ${
-                          car.verified
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-gray-100 text-gray-800"
+                          car.is_sold
+                            ? "bg-red-100 text-red-800" 
+                            : "bg-green-100 text-green-800"
                         }`}
                       >
-                        {car.verified ? "Active" : "Sold"}
+                        {car.is_sold ? "Sold" : "Active"}
                       </Badge>
                     </div>
                     
@@ -323,17 +323,24 @@ const Profile = () => {
                       </div>
                       
                       <div className="mt-4 space-y-2">
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={() => handleViewCarDetails(car.id)}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        View Details
-                      </Button>
-                        {car.verified && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => handleEditListing(car.id)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Listing
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          className="w-full"
+                          onClick={() => handleViewCarDetails(car.id)}
+                        >
+                          View Details
+                        </Button>
+                        {!car.is_sold && (
                           <Button 
-                            variant="secondary" 
+                            variant="default" 
                             className="w-full"
                             onClick={() => handleMarkAsSold(car.id)}
                           >
