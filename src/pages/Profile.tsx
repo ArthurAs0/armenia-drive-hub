@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Mail, Phone, MapPin, Car, Heart, MessageCircle, Settings, LogOut, Edit, DollarSign } from "lucide-react";
+import { User, Mail, Phone, MapPin, Car, Heart, MessageCircle, Settings, LogOut, Edit, DollarSign, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -200,10 +200,16 @@ const Profile = () => {
                 <p className="text-muted-foreground">{user?.email}</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('/')} className="flex items-center gap-2">
+                <Home className="w-4 h-4" />
+                Home
+              </Button>
+              <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
 
