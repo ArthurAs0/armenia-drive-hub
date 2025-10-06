@@ -114,6 +114,30 @@ const SellCar = () => {
         color: formData.color || undefined,
       });
 
+      // Upload images to storage
+      const imageUrls: string[] = [];
+      if (selectedFiles.length > 0) {
+        for (const file of selectedFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('car-images')
+            .upload(fileName, file);
+
+          if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            throw new Error('Failed to upload images');
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('car-images')
+            .getPublicUrl(fileName);
+          
+          imageUrls.push(publicUrl);
+        }
+      }
+
       const { data, error } = await supabase
         .from('cars')
         .insert([{
@@ -127,7 +151,7 @@ const SellCar = () => {
           location: validated.location,
           description: validated.description,
           color: validated.color,
-          images: [],
+          images: imageUrls,
           seller_id: user.id
         }]);
 
